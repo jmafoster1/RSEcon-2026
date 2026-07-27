@@ -5,4 +5,5 @@ Requires-Python: >=3.12
 Requires-Dist: covasim>=3.1.8
 Requires-Dist: jupyter>=1.1.1
 Requires-Dist: rise>=5.7.1
+Requires-Dist: nbstripout
 Requires-Dist: pre-commit
