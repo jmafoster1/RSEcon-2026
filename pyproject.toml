@@ -1,0 +1,9 @@
+[project]
+name="causal_testing_walkthrough"
+requires-python=">=3.12"
+dependencies = [
+    "covasim>=3.1.8",
+    "jupyter>=1.1.1",
+    "rise>=5.7.1",
+]
+dynamic=["version"]
