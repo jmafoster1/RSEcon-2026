@@ -1,0 +1,12 @@
+digraph expected_relationships {
+    location -> average_age;
+    location -> contacts_home;
+    average_age -> contacts_work;
+    average_age -> contacts_school;
+    average_age -> contacts_community;
+    beta -> cum_infections;
+    contacts_home -> cum_infections;
+    contacts_school -> cum_infections;
+    contacts_work -> cum_infections;
+    contacts_community -> cum_infections;
+}

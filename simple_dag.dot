@@ -1,0 +1,4 @@
+digraph expected_relationships {
+  location -> cum_infections;
+  beta -> cum_infections;
+}
