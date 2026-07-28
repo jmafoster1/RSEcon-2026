@@ -12,3 +12,9 @@ repos:
     rev: 0.9.1
     hooks:
     - id: nbstripout
+- repo: https://github.com/psf/black
+  rev: 25.9.0
+  hooks:
+    - id: black
+      args: ['--target-version=py312']
+      files: ^(causal_testing|tests)/
