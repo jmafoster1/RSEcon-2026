@@ -10,6 +10,6 @@ dependencies = [
     "pygraphviz",
     "holoviews",
     "black",
-    "causal_testing_framework @ git+https://github.com/CITCOM-project/CausalTestingFramework@2c8e9514ace56f0df2847e05cc6675152f58aa99"
+    "causal_testing_framework @ git+https://github.com/CITCOM-project/CausalTestingFramework@1318ec34a428ba5bab04dcf29ec533f40cc4a206"
 ]
 dynamic=["version"]
