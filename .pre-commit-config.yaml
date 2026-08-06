@@ -16,5 +16,5 @@ repos:
   rev: 25.9.0
   hooks:
     - id: black
-      args: ['--target-version=py312']
+      args: ['--target-version=py312','--line-length=130']
       files: ^(causal_testing|tests)/

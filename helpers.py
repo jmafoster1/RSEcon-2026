@@ -27,6 +27,8 @@ def render_dag(dag: nx.DiGraph, size: str = None):
     rendered = nx.nx_agraph.to_agraph(dag)
     if size is not None:
         rendered.graph_attr.update(size=size)
+
+    rendered.graph_attr["rankdir"] = "LR"
     rendered.layout(prog="dot")
 
     # Get raw SVG string
@@ -80,8 +82,11 @@ def data_adequacy_heatmap(test_cases: list[CausalTestCase]) -> hv.HeatMap:
     # Render
     return hv.HeatMap(
         adequacy,
-        kdims=["estimator.treatment_variable", "estimator.outcome_variable"],
-        vdims=["result.adequacy.kurtosis"],
+        kdims=[
+            ("estimator.treatment_variable", "Traetment variable"),
+            ("estimator.outcome_variable", "Outcome variable"),
+        ],
+        vdims=[("result.adequacy.kurtosis", "Kurtosis")],
     ).opts(
         cmap=asymmetric_cmap,
         clim=(vmin, vmax),
@@ -112,8 +117,11 @@ def dag_adequacy_heatmap(test_cases: list[CausalTestCase]) -> hv.HeatMap:
 
     return hv.HeatMap(
         adequacy,
-        kdims=["estimator.treatment_variable", "estimator.outcome_variable"],
-        vdims=["result.adequacy.passing"],
+        kdims=[
+            ("estimator.treatment_variable", "Traetment variable"),
+            ("estimator.outcome_variable", "Outcome variable"),
+        ],
+        vdims=[("result.adequacy.passing", "Passing (%)")],
     ).opts(
         cmap="RdYlGn",
         clim=(0, 100),
@@ -261,6 +269,20 @@ def interactive_results_dag(dag: CausalDAG, test_cases: list[CausalTestCase]) ->
     :returns: Inveractive holoviews graph.
     """
     results = results_dag(dag=dag, test_cases=test_cases)
+    for test in test_cases:
+        effect_estimate = pd.concat(
+            [
+                test.result.effect_estimate.ci_low,
+                test.result.effect_estimate.value,
+                test.result.effect_estimate.ci_high,
+            ],
+            axis=1,
+        )
+        effect_estimate.columns = ["ci_low", "estimate", "ci_high"]
+        try:
+            results[test.treatment_variable][test.outcome_variable]["title"] = effect_estimate.to_html()
+        except KeyError:
+            continue
 
     # Use DOT to do the layout
     agraph = nx.nx_agraph.to_agraph(results)
