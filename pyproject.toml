@@ -13,3 +13,8 @@ dependencies = [
     "causal_testing_framework @ git+https://github.com/CITCOM-project/CausalTestingFramework@22429e6dd7463ce65a7563fc9fdaf4c1df4b7998"
 ]
 dynamic=["version"]
+
+[tool.black]
+# https://github.com/psf/black
+line-length = 150
+target-version = ["py311"]
