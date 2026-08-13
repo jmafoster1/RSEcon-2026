@@ -74,7 +74,7 @@ def sort_df_by_median_split(
     """
     Sorts treatment and outcome variables relative to the overall median kurtosis.
     """
-    df_sorted = df[[treatment_col, outcome_col, value_col]].copy()
+    df_sorted = df[[treatment_col, outcome_col, value_col]].copy().dropna()
 
     # Fill missing (treatment, outcome) combinations with empty rows
     # We need this to ensure that it's possible to obtain the correct ordering in the heatmap
@@ -102,7 +102,7 @@ def sort_df_by_median_split(
         df_sorted[outcome_col], categories=_get_split_category_order(df_sorted, outcome_col, value_col), ordered=True
     )
 
-    df_sorted = df_sorted.sort_values(by=[treatment_col, outcome_col]).dropna()
+    df_sorted = df_sorted.sort_values(by=[treatment_col, outcome_col])
 
     # Need to convert the values back to strings, otherwise holoviz thinks they're not unique
     df_sorted[treatment_col] = df_sorted[treatment_col].astype(str)
