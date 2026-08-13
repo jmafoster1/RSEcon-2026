@@ -74,16 +74,17 @@ def sort_df_by_median_split(
     """
     Sorts treatment and outcome variables relative to the overall median kurtosis.
     """
+    df_sorted = df[[treatment_col, outcome_col, value_col]].copy()
 
     # Fill missing (treatment, outcome) combinations with empty rows
     # We need this to ensure that it's possible to obtain the correct ordering in the heatmap
-    df = (
-        df.set_index([treatment_col, outcome_col])
+    df_sorted = (
+        df_sorted.set_index([treatment_col, outcome_col])
         .reindex(
             pd.MultiIndex.from_product(
                 [
-                    df[treatment_col].dropna().unique(),
-                    df[outcome_col].dropna().unique(),
+                    df_sorted[treatment_col].dropna().unique(),
+                    df_sorted[outcome_col].dropna().unique(),
                 ],
                 names=[treatment_col, outcome_col],
             )
@@ -92,12 +93,13 @@ def sort_df_by_median_split(
     )
 
     # Apply ordered categoricals so HoloViews maps the axes to these index positions
-    df_sorted = df[[treatment_col, outcome_col, value_col]].copy()
     df_sorted[treatment_col] = pd.Categorical(
-        df[treatment_col], categories=_get_split_category_order(df, treatment_col, value_col), ordered=True
+        df_sorted[treatment_col],
+        categories=_get_split_category_order(df_sorted, treatment_col, value_col),
+        ordered=True,
     )
     df_sorted[outcome_col] = pd.Categorical(
-        df[outcome_col], categories=_get_split_category_order(df, outcome_col, value_col), ordered=True
+        df_sorted[outcome_col], categories=_get_split_category_order(df_sorted, outcome_col, value_col), ordered=True
     )
 
     df_sorted = df_sorted.sort_values(by=[treatment_col, outcome_col]).dropna()
@@ -392,17 +394,13 @@ def interactive_results_dag(dag: CausalDAG, test_cases: list[CausalTestCase]) ->
         hooks=[style_graph_hook],
         xaxis=None,
         yaxis=None,
-        tools=[
-            HoverTool(
-                tooltips="""
+        tools=[HoverTool(tooltips="""
             <div style="padding: 6px; border: 1px solid #ccc; font-family: sans-serif;">
                 <strong>Treatment:</strong> @source<br>
                 <strong>Outcome:</strong> @target<br>
                 <strong>Causal Effect:</strong> <br/> @title{safe}<br>
             </div>
-        """
-            )
-        ],
+        """)],
         inspection_policy="edges",
     )
 
