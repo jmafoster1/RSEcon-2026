@@ -177,7 +177,7 @@ def dag_adequacy_heatmap(test_cases: list[CausalTestCase]) -> hv.HeatMap:
     return hv.HeatMap(
         sort_df_by_median_split(adequacy, value_col="result.adequacy.passing"),
         kdims=[
-            ("estimator.treatment_variable", "Traetment variable"),
+            ("estimator.treatment_variable", "Treatment variable"),
             ("estimator.outcome_variable", "Outcome variable"),
         ],
         vdims=[("result.adequacy.passing", "Passing (%)")],
