@@ -289,8 +289,6 @@ def style_graph_hook(plot: hv.plotting.bokeh.graphs.GraphPlot, element: hv.Graph
 
     # Define primary Ellipse glyph
     graph_renderer.node_renderer.glyph = Ellipse(
-        x="x",
-        y="y",
         width="width",
         height="height",
         fill_color="white",
@@ -299,8 +297,6 @@ def style_graph_hook(plot: hv.plotting.bokeh.graphs.GraphPlot, element: hv.Graph
 
     # Define hover / inspection Ellipse glyph (prevents reverting to green circles)
     graph_renderer.node_renderer.hover_glyph = Ellipse(
-        x="x",
-        y="y",
         width="width",
         height="height",
         fill_color="skyblue",
@@ -394,13 +390,17 @@ def interactive_results_dag(dag: CausalDAG, test_cases: list[CausalTestCase]) ->
         hooks=[style_graph_hook],
         xaxis=None,
         yaxis=None,
-        tools=[HoverTool(tooltips="""
+        tools=[
+            HoverTool(
+                tooltips="""
             <div style="padding: 6px; border: 1px solid #ccc; font-family: sans-serif;">
                 <strong>Treatment:</strong> @source<br>
                 <strong>Outcome:</strong> @target<br>
                 <strong>Causal Effect:</strong> <br/> @title{safe}<br>
             </div>
-        """)],
+        """
+            )
+        ],
         inspection_policy="edges",
     )
 
