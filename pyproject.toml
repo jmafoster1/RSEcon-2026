@@ -2,7 +2,7 @@
 name="causal_testing_walkthrough"
 requires-python=">=3.12"
 dependencies = [
-    "covasim>=3.1.8",
+    "covasim==3.1.8",
     "jupyter>=1.1.1",
     "rise>=5.7.1",
     "nbstripout",
@@ -10,7 +10,7 @@ dependencies = [
     "pygraphviz",
     "holoviews",
     "black",
-    "causal_testing_framework @ git+https://github.com/CITCOM-project/CausalTestingFramework@22429e6dd7463ce65a7563fc9fdaf4c1df4b7998",
+    "causal_testing_framework==15.0.0",
     "nbclassic"
 ]
 dynamic=["version"]
@@ -19,3 +19,7 @@ dynamic=["version"]
 # https://github.com/psf/black
 line-length = 150
 target-version = ["py311"]
+
+[tool.isort]
+profile = "black"
+line_length = 120

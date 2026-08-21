@@ -2,22 +2,120 @@
 This module contains some helper functions to render stuff that we don't really need in the notebook.
 """
 
+import re
+
+import holoviews as hv
 import networkx as nx
-from IPython.display import HTML, display
-from causal_testing.testing.causal_test_case import CausalTestCase
 import numpy as np
 import pandas as pd
-import holoviews as hv
-from bokeh.models import Arrow, NormalHead, Ellipse, HoverTool
-from scipy.interpolate import splev, make_splprep
-from causal_testing.visualisation.causal_test_result_visualiser import results_dag
+from bokeh.models import Arrow, Ellipse, HoverTool, NormalHead
+from causal_testing.estimation.effect_estimate import EffectEstimate
 from causal_testing.specification.causal_dag import CausalDAG
-import re
+from causal_testing.testing.causal_effect import Negative, Positive
+from causal_testing.testing.causal_test_case import CausalTestCase
+from causal_testing.testing.causal_test_result import TestOutcome
+from IPython.display import HTML, display
+from scipy.interpolate import make_splprep, splev
 
 hv.extension("bokeh")
 
 
-def render_dag(dag: nx.DiGraph, size: str = None):
+# def vertical_align():
+#     display(
+#         HTML(
+#             """
+# <style>
+# /* 1. Force slides to align content from the top instead of vertical centering */
+# .reveal .slides section,
+# .reveal .slides section.present {
+#     top: 0 !important;
+#     padding-top: 40px !important;
+# }
+# </style>
+# """
+#         )
+#     )
+
+
+def effect_direction(test_case: CausalTestCase, dtypes: pd.Series) -> str:
+    """
+    Check whether the estimated causal effect is negative or positive.
+
+    :param test_case: The causal test case.
+    :returns: Whether the estimated causal test is positive or negative (or no effect).
+    """
+    if pd.api.types.is_numeric_dtype(dtypes[test_case.treatment_variable]) and pd.api.types.is_numeric_dtype(
+        dtypes[test_case.outcome_variable]
+    ):
+        if Negative().apply(test_case.result.effect_estimate):
+            return "negative"
+        if Positive().apply(test_case.result.effect_estimate):
+            return "positive"
+    return None
+
+
+def results_dag(
+    dag: CausalDAG,
+    test_cases: list[CausalTestCase],
+    output_file: str = None,
+    view_independences: bool = True,
+    colours: dict[TestOutcome, str] = None,
+) -> nx.DiGraph:
+    """
+    View causal test results as a graph.
+
+    :param output_file: Optional output file to write to (.dot).
+    :param view_independences: Whether to display failed independence tests (defaults to True).
+    :param colours: Optional dictionary of colours to display the test outcomes.
+                    By default, pass=green, fail=red, inestimable=orange.
+    """
+    default_colours = {TestOutcome.PASS: "green", TestOutcome.INESTIMABLE: "orange", TestOutcome.FAIL: "red"}
+
+    if colours is not None:
+        colours = default_colours | colours
+    else:
+        colours = default_colours
+
+    result_dag = nx.DiGraph()
+    result_dag.add_nodes_from(dag.nodes)
+    result_dag.add_edges_from(dag.edges)
+
+    for test in test_cases:
+        if test.result:
+            effect_estimate = pd.concat(
+                [
+                    test.result.effect_estimate.ci_low,
+                    test.result.effect_estimate.value,
+                    test.result.effect_estimate.ci_high,
+                ],
+                axis=1,
+            )
+            effect_estimate.columns = ["ci_low", "estimate", "ci_high"]
+            if (test.treatment_variable, test.outcome_variable) in result_dag.edges:
+                result_dag[test.treatment_variable][test.outcome_variable]["label"] = effect_direction(
+                    test, dag.datatypes
+                )
+                result_dag[test.treatment_variable][test.outcome_variable]["color"] = colours[test.result.outcome]
+                result_dag[test.treatment_variable][test.outcome_variable]["fontcolor"] = colours[test.result.outcome]
+                result_dag[test.treatment_variable][test.outcome_variable]["result"] = test.result.outcome.name
+
+            elif view_independences and test.result.outcome != TestOutcome.PASS:
+                result_dag.add_edge(test.treatment_variable, test.outcome_variable, ignore_cycles=True)
+                result_dag[test.treatment_variable][test.outcome_variable]["style"] = "dashed"
+                result_dag[test.treatment_variable][test.outcome_variable]["label"] = effect_direction(
+                    test, dag.datatypes
+                )
+                result_dag[test.treatment_variable][test.outcome_variable]["color"] = colours[test.result.outcome]
+                result_dag[test.treatment_variable][test.outcome_variable]["fontcolor"] = colours[test.result.outcome]
+                result_dag[test.treatment_variable][test.outcome_variable]["result"] = test.result.outcome.name
+
+    if output_file is not None:
+        nx.drawing.nx_pydot.write_dot(result_dag, output_file)
+
+    return result_dag
+
+
+def render_dag(dag: nx.DiGraph, size: str = None, show_dot=False):
     """
     Show a causal DAG as part of the output of a cell.
 
@@ -36,7 +134,7 @@ def render_dag(dag: nx.DiGraph, size: str = None):
 
     # Inject CSS to make edge lines easier to hover over
     hover_css = """
-   <style>
+    <style>
        .edge path {
            stroke-width: 3px !important;  /* Make line slightly thicker */
            cursor: pointer;
@@ -44,10 +142,25 @@ def render_dag(dag: nx.DiGraph, size: str = None):
        .edge:hover path {
            stroke-width: 5px !important;
        }
-   </style>
-   """
+    </style>
+    """
 
-    display(HTML(hover_css + svg_data))
+    if not show_dot:
+        display(HTML(hover_css + svg_data))
+    else:
+        dot_text = str(nx.nx_pydot.to_pydot(dag))
+        side_by_side_html = f"""
+       <div style="display: flex; gap: 20px; align-items: flex-start;">
+           <div style="flex: 1;">
+               <pre>{dot_text}</pre>
+           </div>
+           <div style="flex: 1;">
+               <div>{hover_css + svg_data}</div>
+           </div>
+       </div>
+       """
+
+        display(HTML(side_by_side_html))
 
 
 def _get_split_category_order(df: pd.DataFrame, col: str, value_col: str) -> list:
@@ -163,7 +276,7 @@ def data_adequacy_heatmap(test_cases: list[CausalTestCase]) -> hv.HeatMap:
     )
 
 
-def dag_adequacy_heatmap(test_cases: list[CausalTestCase]) -> hv.HeatMap:
+def dag_adequacy_heatmap(test_cases: list[CausalTestCase], **kwargs) -> hv.HeatMap:
     """
     Visualise dag adequacy as an adjacency matrix heatmap of the percentage of passing test cases.
 
@@ -189,12 +302,11 @@ def dag_adequacy_heatmap(test_cases: list[CausalTestCase]) -> hv.HeatMap:
         clipping_colors={"NaN": "grey"},  # Grey out invalid tests
         colorbar=True,
         xrotation=90,
-        width=600,
-        height=500,
         tools=["hover"],
         xlabel="Treatment variable",
         ylabel="Outcome variable",
         clabel="Percentage passing test cases",
+        **kwargs,
     )
 
 
@@ -396,6 +508,7 @@ def interactive_results_dag(dag: CausalDAG, test_cases: list[CausalTestCase]) ->
             <div style="padding: 6px; border: 1px solid #ccc; font-family: sans-serif;">
                 <strong>Treatment:</strong> @source<br>
                 <strong>Outcome:</strong> @target<br>
+                <strong>Result:</strong> @result<br>
                 <strong>Causal Effect:</strong> <br/> @title{safe}<br>
             </div>
         """
