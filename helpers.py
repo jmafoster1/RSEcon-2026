@@ -20,23 +20,6 @@ from scipy.interpolate import make_splprep, splev
 hv.extension("bokeh")
 
 
-# def vertical_align():
-#     display(
-#         HTML(
-#             """
-# <style>
-# /* 1. Force slides to align content from the top instead of vertical centering */
-# .reveal .slides section,
-# .reveal .slides section.present {
-#     top: 0 !important;
-#     padding-top: 40px !important;
-# }
-# </style>
-# """
-#         )
-#     )
-
-
 def effect_direction(test_case: CausalTestCase, dtypes: pd.Series) -> str:
     """
     Check whether the estimated causal effect is negative or positive.
@@ -223,7 +206,7 @@ def sort_df_by_median_split(
     return df_sorted
 
 
-def data_adequacy_heatmap(test_cases: list[CausalTestCase]) -> hv.HeatMap:
+def data_adequacy_heatmap(test_cases: list[CausalTestCase], **kwargs) -> hv.HeatMap:
     """
     Visualise data adequacy as an adjacency matrix heatmap of the kurtosis.
 
@@ -266,13 +249,21 @@ def data_adequacy_heatmap(test_cases: list[CausalTestCase]) -> hv.HeatMap:
         clim=(vmin, vmax),
         clipping_colors={"NaN": "grey"},  # Grey out invalid tests
         colorbar=True,
-        xrotation=90,
-        width=600,
-        height=500,
+        xrotation=45,
+        fontsize={
+            "xlabel": "16pt",  # X-axis main label
+            "ylabel": "16pt",  # Y-axis main label
+            "xticks": "14pt",  # X-axis tick numbers/text
+            "yticks": "14pt",  # Y-axis tick numbers/text
+            "title": "18pt",  # Plot title (optional)
+            "cticks": "12pt",  # Colorbar ticks (optional)
+            "clabel": "14pt",  # Colorbar label (optional)
+        },
         tools=["hover"],
         xlabel="Treatment variable",
         ylabel="Outcome variable",
         clabel="Causal test adequacy",
+        **kwargs,
     )
 
 
@@ -301,7 +292,16 @@ def dag_adequacy_heatmap(test_cases: list[CausalTestCase], **kwargs) -> hv.HeatM
         clim=(0, 100),
         clipping_colors={"NaN": "grey"},  # Grey out invalid tests
         colorbar=True,
-        xrotation=90,
+        xrotation=45,
+        fontsize={
+            "xlabel": "16pt",  # X-axis main label
+            "ylabel": "16pt",  # Y-axis main label
+            "xticks": "14pt",  # X-axis tick numbers/text
+            "yticks": "14pt",  # Y-axis tick numbers/text
+            "title": "18pt",  # Plot title (optional)
+            "cticks": "12pt",  # Colorbar ticks (optional)
+            "clabel": "14pt",  # Colorbar label (optional)
+        },
         tools=["hover"],
         xlabel="Treatment variable",
         ylabel="Outcome variable",
