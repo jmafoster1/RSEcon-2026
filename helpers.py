@@ -34,7 +34,7 @@ def effect_direction(test_case: CausalTestCase, dtypes: pd.Series) -> str:
             return "negative"
         if Positive().apply(test_case.result.effect_estimate):
             return "positive"
-    return None
+    return ""
 
 
 def results_dag(
