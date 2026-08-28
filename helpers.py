@@ -2,6 +2,7 @@
 This module contains some helper functions to render stuff that we don't really need in the notebook.
 """
 
+import json
 import re
 
 import holoviews as hv
@@ -14,10 +15,21 @@ from causal_testing.specification.causal_dag import CausalDAG
 from causal_testing.testing.causal_effect import Negative, Positive
 from causal_testing.testing.causal_test_case import CausalTestCase
 from causal_testing.testing.causal_test_result import TestOutcome
+from covasim import Sim
 from IPython.display import HTML, display
 from scipy.interpolate import make_splprep, splev
 
 hv.extension("bokeh")
+
+
+def cumulative_infections(sim: Sim):
+    """
+    Get the cumulative infections from a simulation result.
+
+    :param sim: The simulator.
+    :return: The final cumulative infection result.
+    """
+    return int(sim.results["cum_infections"][-1])
 
 
 def effect_direction(test_case: CausalTestCase, dtypes: pd.Series) -> str:
@@ -206,17 +218,18 @@ def sort_df_by_median_split(
     return df_sorted
 
 
-def data_adequacy_heatmap(test_cases: list[CausalTestCase], **kwargs) -> hv.HeatMap:
+def data_adequacy_heatmap(test_cases: str, **kwargs) -> hv.HeatMap:
     """
     Visualise data adequacy as an adjacency matrix heatmap of the kurtosis.
 
-    :param test_cases: List of executed test cases to process.
+    :param test_cases: JSON file where the test results are.
     """
-    adequacy = pd.json_normalize(map(lambda t: t.to_dict(), test_cases))
+    with open(test_cases) as f:
+        adequacy = pd.json_normalize(json.load(f))
 
-    for col in ["effect_estimate", "ci_low", "ci_high", "adequacy.kurtosis"]:
-        columns = [c for c in adequacy.columns if c.startswith(f"result.{col}.")]
-        adequacy[f"result.{col}"] = adequacy[columns].bfill(axis=1).iloc[:, 0]
+    for col in ["kurtosis"]:
+        columns = [c for c in adequacy.columns if c.startswith(f"result.adequacy.{col}.")]
+        adequacy[f"result.adequacy.{col}"] = adequacy[columns].bfill(axis=1).iloc[:, 0]
         adequacy = adequacy.drop(columns=columns)
     adequacy = sort_df_by_median_split(adequacy)
 
