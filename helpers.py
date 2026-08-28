@@ -16,7 +16,7 @@ from causal_testing.testing.causal_effect import Negative, Positive
 from causal_testing.testing.causal_test_case import CausalTestCase
 from causal_testing.testing.causal_test_result import TestOutcome
 from covasim import Sim
-from IPython.display import HTML, display
+from IPython.display import HTML, clear_output, display
 from scipy.interpolate import make_splprep, splev
 
 hv.extension("bokeh")
@@ -117,6 +117,7 @@ def render_dag(dag: nx.DiGraph, size: str = None, show_dot=False):
     :param dag: The dag to display.
     :param size: The size it should be in inches, e.g. "10,7" for a 10 by 7 inch plot.
     """
+    clear_output()
     rendered = nx.nx_agraph.to_agraph(dag)
     if size is not None:
         rendered.graph_attr.update(size=size)

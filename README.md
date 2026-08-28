@@ -38,3 +38,11 @@ As above, if you do not, try `View > Open in NbClassic` and then `View > Cell To
 - The **slide** option marks the start of a new slide. Use this just like you would for a new slide on Powerpoint etc.
 - The **subslide** option marks a new part of a slide. This will appear on a fresh screen (previous content will disappear), but will be part of the same "slide". This is useful for showing code and its output since the amount you can actually fit on the screen is very small.
 - The **fragment** option is for little snippets that will reveal themselves sequentially while the previous elements remain onscreen.
+
+## Converting to HTML slides
+To convert the notebook to HTML slides, uncomment `hv.output(fig='png')` in the first cell of the notebook and run
+```
+jupyter nbconvert slides.ipynb --to slides --execute --SlidesExporter.reveal_width=1600   --SlidesExporter.reveal_height=900
+```
+> [!WARNING]
+> Don't forget to comment it back out again!
